@@ -19,7 +19,7 @@ After the command works, access localhost:8080 in a browser.
 - [x] Convert to ONNX
 - [x] Run on a browser
 - [ ] Crop the input image so that its height and width are multiples of scale factor (12)
-- [ ] Optimize conversion of data transform of input and output of the inference process
+- [ ] Optimize data transformation arround the inference process
 - [ ] Support WebRTC to transmit enhanced images
 
 ## Authors
