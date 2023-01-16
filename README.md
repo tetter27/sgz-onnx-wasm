@@ -1,5 +1,5 @@
 # SGZ-ONNX-WASM
-Convert SGZ model for Low Light Image Enhancement to ONNX and run it in the browser.
+Convert SGZ model for Low Light Image Enhancement to ONNX and run it in the browser.  
 Eventually, it will be adopted WebRTC to be able to transmit enhanced images.
 
 ## Get Started
@@ -29,5 +29,5 @@ tetter
 This project is licensed under the MIT License - see the LICENSE file for details
 
 ## Reference
-Semantic-Guided-Low-Light-Image-Enhancement
+Semantic-Guided-Low-Light-Image-Enhancement  
 https://github.com/ShenZheng2000/Semantic-Guided-Low-Light-Image-Enhancement
