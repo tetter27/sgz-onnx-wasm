@@ -18,7 +18,7 @@ After the command works, access localhost:8080 in a browser.
 ### Loadmap
 - [x] Convert to ONNX
 - [x] Run on a browser
-- [ ] Proofread comments
+- [x] Proofread comments
 - [ ] Support TypeScript + next.js
 - [ ] Crop the input image so that its height and width are multiples of scale factor (i.e. 12)
 - [ ] Optimize data transformation arround the inference process
