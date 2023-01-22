@@ -11,7 +11,7 @@
 
     // Default executionProviders => ['wasm']
     const session = await ort.InferenceSession.create('sgz.onnx');
-    //const session = await ort.InferenceSession.create('sgz.onnx', { executionProviders: ['webGl'] });
+    //const session = await ort.InferenceSession.create('sgz.onnx', { executionProviders: ['webgl'] });
     console.log('Inference session created');
 
     // Acquire stream from a camera
@@ -54,9 +54,6 @@
         canvasCtx.clearRect(0, 0, elementLightVideo.width, elementLightVideo.height);
         canvasCtx.putImageData(enhancedFrame, 0, 0);
         
-        const totalEnd = new Date();
-        const totalTime = (totalEnd.getTime() - totalStart.getTime())/1000;
-
         console.timeEnd("total")
 
         videoFrame.close();
@@ -155,7 +152,7 @@ async function runInference(session, imageTensor){
 //       ( [R,R,R,..],[G,G,G,..],[B,B,B,...]  ->  [R,G,B],[R,G,B],[R,G,B],.. )
 async function tensor2Image(result, streamWidth, streamHeight, dims){
 
-  console.timeEnd("postProcess");
+  console.time("postProcess");
 
   // 1. Convert to float32. (A)
   const int8Data = new Uint8Array(dims[1] * dims[2] * dims[3]);
