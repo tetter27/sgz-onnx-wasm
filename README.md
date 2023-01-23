@@ -20,7 +20,7 @@ After the command works, access localhost:8080 in a browser.
 - [x] Run on a browser
 - [x] Proofread comments
 - [ ] Support TypeScript + next.js
-- [ ] Crop the input image so that its height and width are multiples of scale factor (i.e. 12)
+- [x] Crop the input image so that its height and width are multiples of scale factor (i.e. 12)
 - [ ] Modify a little collapse of layout if it exists yet
 - [ ] Optimize data transformation arround the inference process
 - [ ] Support WebRTC to transmit enhanced images

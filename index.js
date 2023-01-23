@@ -6,8 +6,13 @@
     const elementLightVideo = document.getElementById("light-video"); 
     const canvasCtx = elementLightVideo.getContext("2d");
 
-    const streamWidth = 840;  // ToDo: Change to arbitrary size
-    const streamHeight = 564;  // ToDo: Change to arbitrary size
+    const streamWidth = 1200;  // ToDo: Change to arbitrary size
+    const streamHeight = 700;  // ToDo: Change to arbitrary size
+    const scaledWidth = Math.floor(streamWidth / 12) * 12;
+    const scaledHeight = Math.floor(streamHeight / 12) * 12;
+
+    elementLightVideo.width = scaledWidth;
+    elementLightVideo.height = scaledHeight;
 
     // Default executionProviders => ['wasm']
     const session = await ort.InferenceSession.create('sgz.onnx');
@@ -37,7 +42,7 @@
       async write(videoFrame) {
 
         // ToDo: Create a class
-        const dims = [1, 3, streamWidth, streamHeight];
+        const dims = [1, 3, scaledWidth, scaledHeight];
         console.time("total")
 
         // Convert data architecture to inference
@@ -47,7 +52,7 @@
         const results =  await runInference(session, imageTensor);
 
         // Convert data architecture to display
-        const enhancedFrame = await tensor2Image(results, streamWidth, streamHeight, dims);
+        const enhancedFrame = await tensor2Image(results, dims);
         
         // Draw enhanced image to browser
         canvasCtx.save();
@@ -60,7 +65,7 @@
       },
       // Event handlers
       start() {
-        console.log("WritableStream started")
+        console.log("WritableStream started");
       },
       stop() {
         console.log("WritableStream stopped");
@@ -92,12 +97,13 @@ async function image2Tensor(videoFrame, streamWidth, streamHeight, dims){
   const imageBitmap = await createImageBitmap(videoFrame);
   const canvas = new OffscreenCanvas(1,1);    // needs an initial size
   const ctx = canvas.getContext("2d");
-  canvas.height = streamHeight;
   canvas.width = streamWidth;
+  canvas.height = streamHeight;
+
   ctx.drawImage(imageBitmap, 0, 0);
 
   // 2. Get image data from canvas as ImageData. (A)
-  var imageBufferData = ctx.getImageData(0, 0, streamWidth, streamHeight).data;
+  var imageBufferData = ctx.getImageData(0, 0, dims[2], dims[3]).data;
 
   // 3. Separate color to each color array. (B)
   const [redArray, greenArray, blueArray] = new Array(new Array(), new Array(), new Array());
@@ -150,35 +156,33 @@ async function runInference(session, imageTensor){
 //   A. float32  ->  uint8
 //   B. [batch, channel, Width, Height]  ->  [Width, Height, channel]
 //       ( [R,R,R,..],[G,G,G,..],[B,B,B,...]  ->  [R,G,B],[R,G,B],[R,G,B],.. )
-async function tensor2Image(result, streamWidth, streamHeight, dims){
+async function tensor2Image(result, dims){
 
   console.time("postProcess");
 
   // 1. Convert to float32. (A)
-  const int8Data = new Uint8Array(dims[1] * dims[2] * dims[3]);
+  const int8Data = new Uint8ClampedArray(dims[1] * dims[2] * dims[3]);
   for (let i = 0; i < result.data.length; i++) {
     int8Data[i] = parseInt(result.data[i] * 255); // convert to int
   }
 
   // 2. Pass around RGB to transpose [3, width, height] -> [width, height, 3] to a number array. (B)
-  const transposedData = new Array();
+  const transposedData = new Uint8ClampedArray(4 * dims[2] * dims[3]);
+  let j = 0
   for (let i = 0; i < int8Data.length / 3; i++){
-    transposedData.push(int8Data[i]);
-    transposedData.push(int8Data[i + (int8Data.length / 3)]);
-    transposedData.push(int8Data[i + (2 * int8Data.length / 3)]);
-    transposedData.push(255);  // the alpha channel filled with 255 (nontransparent)
+    transposedData[j++] = int8Data[i];
+    transposedData[j++] = int8Data[i + (int8Data.length / 3)];
+    transposedData[j++] = int8Data[i + (2 * int8Data.length / 3)];
+    transposedData[j++] = 255;  // the alpha channel filled with 255 (nontransparent)
   }
 
   // 3. Create ImageData to draw with canvas.
-  const uint8Data = new Uint8ClampedArray(transposedData);
-  const imageData = new ImageData(uint8Data, streamWidth);
+  const imageData = new ImageData(transposedData, dims[2], dims[3]);
 
   console.timeEnd("postProcess");
 
   return imageData;
 
 }
-
-
 
 
