@@ -1,9 +1,12 @@
+:warning: Current typescript code does not work.
+
 # SGZ-ONNX-WASM
 Convert SGZ model for Low Light Image Enhancement to ONNX and run it in the browser.  
 Eventually, it will be adopted WebRTC to be able to transmit enhanced images.
 
 ## Get Started
 ### Dependencies
+* node
 * An arbitrary OS
 * An arbitrary browser
 * An arbitrary web camera
