@@ -1,4 +1,3 @@
-// ToDo: Trim images that its hight and width are multiple of 12
 (async function () {
 
     // Display images before and after processing
@@ -6,17 +5,20 @@
     const elementLightVideo = document.getElementById("light-video"); 
     const canvasCtx = elementLightVideo.getContext("2d");
 
-    const streamWidth = 1200;  // ToDo: Change to arbitrary size
-    const streamHeight = 700;  // ToDo: Change to arbitrary size
+    const streamWidth = 840;
+    const streamHeight = 564;
     const scaledWidth = Math.floor(streamWidth / 12) * 12;
     const scaledHeight = Math.floor(streamHeight / 12) * 12;
+
+    console.log("scaledWidth: ", scaledWidth);
+    console.log("scaledHeight: ", scaledHeight);
 
     elementLightVideo.width = scaledWidth;
     elementLightVideo.height = scaledHeight;
 
     // Default executionProviders => ['wasm']
     const session = await ort.InferenceSession.create('sgz.onnx');
-    //const session = await ort.InferenceSession.create('sgz.onnx', { executionProviders: ['webgl'] });
+    //const session = await ort.InferenceSession.create('sgz.onnx', { executionProviders: ['webgl'], graphOptimizationLevel: 'all' });
     console.log('Inference session created');
 
     // Acquire stream from a camera
@@ -42,7 +44,7 @@
       async write(videoFrame) {
 
         // ToDo: Create a class
-        const dims = [1, 3, scaledWidth, scaledHeight];
+        const dims = [1, 3, scaledHeight, scaledWidth];
         console.time("total")
 
         // Convert data architecture to inference
@@ -103,7 +105,7 @@ async function image2Tensor(videoFrame, streamWidth, streamHeight, dims){
   ctx.drawImage(imageBitmap, 0, 0);
 
   // 2. Get image data from canvas as ImageData. (A)
-  var imageBufferData = ctx.getImageData(0, 0, dims[2], dims[3]).data;
+  const imageBufferData = ctx.getImageData(0, 0, dims[3], dims[2]).data;
 
   // 3. Separate color to each color array. (B)
   const [redArray, greenArray, blueArray] = new Array(new Array(), new Array(), new Array());
@@ -114,7 +116,7 @@ async function image2Tensor(videoFrame, streamWidth, streamHeight, dims){
     // skip data[i + 3] to filter out the alpha channel
   }
 
-  // 4. Concatenate RGB to transpose [width, height, 3] -> [3, width, height] to a number array. (B)
+  // 4. Concatenate RGB to transpose [width, height, 3] -> [3, height, width] to a number array. (B)
   const transposedData = redArray.concat(greenArray).concat(blueArray);
 
   // 5. Convert to float32. (C)
@@ -160,10 +162,10 @@ async function tensor2Image(result, dims){
 
   console.time("postProcess");
 
-  // 1. Convert to float32. (A)
+  // 1. Convert to int8. (A)
   const int8Data = new Uint8ClampedArray(dims[1] * dims[2] * dims[3]);
   for (let i = 0; i < result.data.length; i++) {
-    int8Data[i] = parseInt(result.data[i] * 255); // convert to int
+    int8Data[i] = parseInt(result.data[i] * 255.0); // convert to int
   }
 
   // 2. Pass around RGB to transpose [3, width, height] -> [width, height, 3] to a number array. (B)
@@ -177,7 +179,7 @@ async function tensor2Image(result, dims){
   }
 
   // 3. Create ImageData to draw with canvas.
-  const imageData = new ImageData(transposedData, dims[2], dims[3]);
+  const imageData = new ImageData(transposedData, dims[3]);
 
   console.timeEnd("postProcess");
 
