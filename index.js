@@ -43,7 +43,6 @@
   
       async write(videoFrame) {
 
-        // ToDo: Create a class
         const dims = [1, 3, scaledHeight, scaledWidth];
         console.time("total")
 

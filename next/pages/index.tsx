@@ -1,20 +1,24 @@
 import Head from 'next/head'
 import styles from '@/styles/Home.module.css'
 import React, { useRef, useEffect } from 'react'
+import Enhancement from '@/components/Enhancement';
 
-export default function myapp() {
+export default function myApp() {
 
+  // Refference for the video tag
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  let stream: MediaStream;
   
+  // Execute after rendering
   useEffect(() => {
-    const setVideoStream = async () => {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true});
+    const setVideoStream = async (stream: MediaStream) => {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true});
       if (videoRef.current){
         videoRef.current.srcObject = stream;
       }
     }
-
-    setVideoStream();
+    setVideoStream(stream);
   }, [])
 
 
@@ -37,6 +41,7 @@ export default function myapp() {
         </div>
         <div>
           <video ref ={videoRef} autoPlay/>
+          <Enhancement/>
         </div>
       </main>
     </>
