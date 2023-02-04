@@ -1,16 +1,22 @@
-import React from 'react';
+import React, {useRef} from 'react';
 
-class Enhancement extends React.Component {
-    constructor(props: any) {
-        super(props);
-    }
-    render() {
-        return (
-            <div>
-              hello
-            </div>
-        );
-    }
+interface videoProps {
+    video: MediaStream | null
 }
 
-export default Enhancement;
+const Enhancement: React.FC<videoProps> = (props) => {
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const srcVideo = props.video;
+    if (videoRef.current){
+        videoRef.current.srcObject = srcVideo;
+      }
+    
+    return (
+        <div>
+            <video ref={videoRef} autoPlay/>
+        </div>
+    );
+    
+}
+
+export default Enhancement

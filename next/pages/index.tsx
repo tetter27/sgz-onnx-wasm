@@ -1,25 +1,25 @@
 import Head from 'next/head'
 import styles from '@/styles/Home.module.css'
-import React, { useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import Enhancement from '@/components/Enhancement';
 
 export default function myApp() {
 
   // Refference for the video tag
   const videoRef = useRef<HTMLVideoElement>(null);
-
-  let stream: MediaStream;
+  const [s, setStream] = useState<MediaStream | null>(null);
   
   // Execute after rendering
   useEffect(() => {
-    const setVideoStream = async (stream: MediaStream) => {
-      stream = await navigator.mediaDevices.getUserMedia({ video: true});
+    const setVideoStream = async (stream: MediaStream | null) => {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
       if (videoRef.current){
         videoRef.current.srcObject = stream;
+        setStream(stream);
       }
     }
-    setVideoStream(stream);
-  }, [])
+    setVideoStream(s);
+  }, [videoRef])
 
 
   return (
@@ -40,8 +40,10 @@ export default function myApp() {
           </p>
         </div>
         <div>
-          <video ref ={videoRef} autoPlay/>
-          <Enhancement/>
+          <video ref={videoRef} autoPlay/>
+          <Enhancement
+          video = {s}
+          />
         </div>
       </main>
     </>
