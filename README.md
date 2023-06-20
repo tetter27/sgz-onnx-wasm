@@ -8,7 +8,7 @@ Eventually, it will be adopted WebRTC to be able to transmit enhanced images.
 ### Dependencies
 * node
 * An arbitrary OS
-* An arbitrary browser
+* Google Chrome
 * An arbitrary web camera
 
 ### Executing program
