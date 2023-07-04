@@ -86,7 +86,7 @@
 
 
 // Convert VideoFrame to Tensor so that ONNX runtime can handle.
-//   A. YUV (I420/NV12)  ->  RGB
+//   A. YUV (I420/NV12)  ->  RGBA
 //   B. [Width, Height, channel]             ->  [batch, channel, Width, Height]
 //       ( [R,G,B,A],[R,G,B,A],[R,G,B,A],..  ->  [R,R,R,..],[G,G,G,..],[B,B,B,...] )
 //   C. uint8  ->  float32
