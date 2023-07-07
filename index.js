@@ -86,10 +86,10 @@
 
 
 // Convert VideoFrame to Tensor so that ONNX runtime can handle.
-//   A. YUV (NV12)  ->  RGB
-//   B. [Width, Height, channel]  ->  [batch, channel, Width, Height]
-//       ( [R,G,B],[R,G,B],[R,G,B],..  ->  [R,R,R,..],[G,G,G,..],[B,B,B,...] )
-//   C. uint8  ->  fload32
+//   A. YUV (I420/NV12)  ->  RGBA
+//   B. [Width, Height, channel]             ->  [batch, channel, Width, Height]
+//       ( [R,G,B,A],[R,G,B,A],[R,G,B,A],..  ->  [R,R,R,..],[G,G,G,..],[B,B,B,...] )
+//   C. uint8  ->  float32
 async function image2Tensor(videoFrame, streamWidth, streamHeight, dims){
 
   console.time("preProcess");
@@ -106,25 +106,14 @@ async function image2Tensor(videoFrame, streamWidth, streamHeight, dims){
   // 2. Get image data from canvas as ImageData. (A)
   const imageBufferData = ctx.getImageData(0, 0, dims[3], dims[2]).data;
 
-  // 3. Separate color to each color array. (B)
-  const [redArray, greenArray, blueArray] = new Array(new Array(), new Array(), new Array());
-  for (let i = 0; i < imageBufferData.length; i += 4) {
-    redArray.push(imageBufferData[i]);
-    greenArray.push(imageBufferData[i + 1]);
-    blueArray.push(imageBufferData[i + 2]);
-    // skip data[i + 3] to filter out the alpha channel
-  }
-
-  // 4. Concatenate RGB to transpose [width, height, 3] -> [3, height, width] to a number array. (B)
-  const transposedData = redArray.concat(greenArray).concat(blueArray);
-
-  // 5. Convert to float32. (C)
-  let i, l = transposedData.length; // length, we need this for the loop
-  // create the Float32Array size 3 * width * height for these dimensions output
+  // 3. Separate color to each color array. (B) and uint8 -> float32 (C)
   const float32Data = new Float32Array(dims[1] * dims[2] * dims[3]);
-  for (i = 0; i < l; i++) {
-    float32Data[i] = transposedData[i] / 255.0; // convert to float
+  for (let i = 0; i < imageBufferData.length / 4; i++) {
+    float32Data[i] = imageBufferData[i * 4] / 255.0; // R
+    float32Data[i + dims[2] * dims[3]] = imageBufferData[i * 4 + 1] / 255.0; // G
+    float32Data[i + dims[2] * dims[3] * 2] = imageBufferData[i * 4 + 2] / 255.0; // B
   }
+
   // 6. Create the tensor object from onnxruntime-web.
   const inputTensor = new ort.Tensor("float32", float32Data, dims);
 
@@ -156,24 +145,19 @@ async function runInference(session, imageTensor){
 // Convert Tensor to ImageData so that browser can draw.
 //   A. float32  ->  uint8
 //   B. [batch, channel, Width, Height]  ->  [Width, Height, channel]
-//       ( [R,R,R,..],[G,G,G,..],[B,B,B,...]  ->  [R,G,B],[R,G,B],[R,G,B],.. )
+//       ( [R,R,R,..],[G,G,G,..],[B,B,B,...]  ->  [R,G,B,A],[R,G,B,A],[R,G,B,A],.. )
 async function tensor2Image(result, dims){
 
   console.time("postProcess");
 
   // 1. Convert to int8. (A)
-  const int8Data = new Uint8ClampedArray(dims[1] * dims[2] * dims[3]);
-  for (let i = 0; i < result.data.length; i++) {
-    int8Data[i] = parseInt(result.data[i] * 255.0); // convert to int
-  }
-
   // 2. Pass around RGB to transpose [3, width, height] -> [width, height, 3] to a number array. (B)
   const transposedData = new Uint8ClampedArray(4 * dims[2] * dims[3]);
   let j = 0
-  for (let i = 0; i < int8Data.length / 3; i++){
-    transposedData[j++] = int8Data[i];
-    transposedData[j++] = int8Data[i + (int8Data.length / 3)];
-    transposedData[j++] = int8Data[i + (2 * int8Data.length / 3)];
+  for (let i = 0; i < result.data.length / 3; i++){
+    transposedData[j++] = result.data[i] * 255.0;
+    transposedData[j++] = result.data[i + (result.data.length / 3)] * 255.0;
+    transposedData[j++] = result.data[i + (2 * result.data.length / 3)] * 255.0;
     transposedData[j++] = 255;  // the alpha channel filled with 255 (nontransparent)
   }
 
